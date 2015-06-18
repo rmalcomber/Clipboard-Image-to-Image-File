@@ -46,5 +46,29 @@ namespace ClipboardImageToFile.Properties {
                 this["FirstTime"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int FormatType {
+            get {
+                return ((int)(this["FormatType"]));
+            }
+            set {
+                this["FormatType"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CopyFilePath {
+            get {
+                return ((bool)(this["CopyFilePath"]));
+            }
+            set {
+                this["CopyFilePath"] = value;
+            }
+        }
     }
 }

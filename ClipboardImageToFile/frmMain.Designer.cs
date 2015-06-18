@@ -35,6 +35,9 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label2 = new System.Windows.Forms.Label();
+            this.cbCopyFilePath = new System.Windows.Forms.CheckBox();
+            this.cbFileType = new System.Windows.Forms.ComboBox();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -56,19 +59,20 @@
             // 
             // bntBrowesLocattion
             // 
-            this.bntBrowesLocattion.Location = new System.Drawing.Point(201, 38);
+            this.bntBrowesLocattion.Location = new System.Drawing.Point(280, 12);
             this.bntBrowesLocattion.Name = "bntBrowesLocattion";
-            this.bntBrowesLocattion.Size = new System.Drawing.Size(75, 23);
+            this.bntBrowesLocattion.Size = new System.Drawing.Size(26, 20);
             this.bntBrowesLocattion.TabIndex = 2;
-            this.bntBrowesLocattion.Text = "Browse...";
+            this.bntBrowesLocattion.Text = "...";
             this.bntBrowesLocattion.UseVisualStyleBackColor = true;
             this.bntBrowesLocattion.Click += new System.EventHandler(this.bntBrowesLocattion_Click);
             // 
             // btn_Update
             // 
-            this.btn_Update.Location = new System.Drawing.Point(183, 77);
+            this.btn_Update.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_Update.Location = new System.Drawing.Point(231, 86);
             this.btn_Update.Name = "btn_Update";
-            this.btn_Update.Size = new System.Drawing.Size(93, 23);
+            this.btn_Update.Size = new System.Drawing.Size(75, 23);
             this.btn_Update.TabIndex = 7;
             this.btn_Update.Text = "Save";
             this.btn_Update.UseVisualStyleBackColor = true;
@@ -88,27 +92,58 @@
             this.settingsToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(117, 48);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(114, 48);
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
             this.exitToolStripMenuItem.Text = "&Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(50, 46);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(42, 13);
+            this.label2.TabIndex = 8;
+            this.label2.Text = "Format:";
+            // 
+            // cbCopyFilePath
+            // 
+            this.cbCopyFilePath.AutoSize = true;
+            this.cbCopyFilePath.Location = new System.Drawing.Point(186, 45);
+            this.cbCopyFilePath.Name = "cbCopyFilePath";
+            this.cbCopyFilePath.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.cbCopyFilePath.Size = new System.Drawing.Size(90, 17);
+            this.cbCopyFilePath.TabIndex = 10;
+            this.cbCopyFilePath.Text = "Copy file path";
+            this.cbCopyFilePath.UseVisualStyleBackColor = true;
+            // 
+            // cbFileType
+            // 
+            this.cbFileType.FormattingEnabled = true;
+            this.cbFileType.Location = new System.Drawing.Point(98, 38);
+            this.cbFileType.Name = "cbFileType";
+            this.cbFileType.Size = new System.Drawing.Size(82, 21);
+            this.cbFileType.TabIndex = 11;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(288, 112);
+            this.ClientSize = new System.Drawing.Size(321, 121);
+            this.Controls.Add(this.cbFileType);
+            this.Controls.Add(this.cbCopyFilePath);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btn_Update);
             this.Controls.Add(this.bntBrowesLocattion);
             this.Controls.Add(this.label1);
@@ -137,6 +172,9 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox cbCopyFilePath;
+        private System.Windows.Forms.ComboBox cbFileType;
     }
 }
 

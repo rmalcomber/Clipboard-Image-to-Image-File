@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Drawing.Imaging;
 #endregion
 
 namespace ClipboardImageToFile {
@@ -24,14 +25,13 @@ namespace ClipboardImageToFile {
         private bool tmrEnabled = false;
         private Settings settings;
         private bool RealExit = false;
-        private string FileExtension = ".jpg";
         private Image img;
 
         private const string DisabledText = "Disable";
         private const string EnabledText = "Enable";
 
         IntPtr nextClipboardViewer;
-        
+
 
         #endregion
 
@@ -41,7 +41,7 @@ namespace ClipboardImageToFile {
         protected static extern int SetClipboardViewer(int hWndNewViewer);
         [DllImport("User32.dll")]
         public static extern bool ChangeClipboardChain(IntPtr hWndRemove, IntPtr hWndNewNext);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
         public static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
 
         #endregion
@@ -85,13 +85,15 @@ namespace ClipboardImageToFile {
                 //Storing the image from the clipboard
                 img = Clipboard.GetImage();
 
+                //Get the file details.
+                FileOptions fi = GetFileOption((FileType)settings.FormatType);
 
                 //Get the file name
-                string filePath = settings.ExportLocation + "/" + DateTime.Now.ToString("yyyyMMddhhmmssff");
+                string filePath = settings.ExportLocation + @"\" + DateTime.Now.ToString("yyyyMMddhhmmssff");
 
                 //Increment the filename if already exists. This should never happen though. 
                 int count = 0;
-                while (File.Exists(filePath + FileExtension)) {
+                while (File.Exists(filePath + fi.extension)) {
                     count++;
                     if (count > 0)
                         filePath += "_" + count.ToString();
@@ -101,9 +103,13 @@ namespace ClipboardImageToFile {
                 Bitmap bmp = new Bitmap(img);
 
                 //Save out the file
-                bmp.Save(filePath + FileExtension, System.Drawing.Imaging.ImageFormat.Jpeg);
+                bmp.Save(filePath + fi.extension, fi.format);
                 bmp.Dispose();
                 img.Dispose();
+
+                //Copy filepath
+                if (settings.CopyFilePath)
+                    Clipboard.SetText(filePath + fi.extension);
 
             }
         }
@@ -113,6 +119,34 @@ namespace ClipboardImageToFile {
             this.WindowState = FormWindowState.Normal;
             this.Show();
             this.BringToFront();
+        }
+
+        //Gets the file type details
+        private FileOptions GetFileOption(FileType ft) {
+
+            FileOptions ret = new FileOptions();
+            ret.extension = "." + Enum.GetName(typeof(FileType), ft);
+
+            switch (ft) {
+                case FileType.PNG:
+                    ret.format = ImageFormat.Png;
+                    break;
+                case FileType.JPEG:
+                    ret.format = ImageFormat.Jpeg;
+                    break;
+                case FileType.GIF:
+                    ret.format = ImageFormat.Gif;
+                    break;
+                case FileType.Bitmap:
+                    ret.format = ImageFormat.Bmp;
+                    break;
+                default:
+                    ret.format = ImageFormat.Jpeg;
+                    break;
+            }
+
+            return ret;
+
         }
 
         #endregion
@@ -137,7 +171,7 @@ namespace ClipboardImageToFile {
                         SendMessage(nextClipboardViewer, m.Msg, m.WParam, m.LParam);
                     break;
 
-                    
+
                 default:
                     base.WndProc(ref m);
                     break;
@@ -154,13 +188,19 @@ namespace ClipboardImageToFile {
         private void Form1_Load(object sender, EventArgs e) {
 
             txtExportLocation.Text = settings.ExportLocation;
-            
+
             //Show the settings box if the first time running the application
             if (settings.FirstTime) {
                 ShowSettingsform();
                 settings.FirstTime = false;
                 settings.Save();
             }
+
+
+            cbFileType.DataSource = Enum.GetNames(typeof(FileType));
+            cbFileType.SelectedItem = (FileType)settings.FormatType;
+            cbCopyFilePath.Checked = settings.CopyFilePath;
+
         }
 
 
@@ -206,21 +246,41 @@ namespace ClipboardImageToFile {
         private void btn_Update_Click(object sender, EventArgs e) {
 
             bool hasWarning = false;
-           
-
-
 
 
             if (!Directory.Exists(txtExportLocation.Text)) {
-                MessageBox.Show(String.Format(" Directory '{0}' cannot be found, please check", txtExportLocation.Text), "Can't Find Directory", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(String.Format("Directory '{0}' cannot be found, please check", txtExportLocation.Text), "Can't Find Directory", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 hasWarning = true;
-            } else
+            }
+            else
                 settings.ExportLocation = txtExportLocation.Text;
 
-            settings.Save();
-            
 
+            FileType fi = (FileType)settings.FormatType;
+
+            if (cbFileType.SelectedValue == null) {
+                MessageBox.Show(String.Format("Format option is invalid, please check.", cbFileType.SelectedText), "Can't convert to format type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                hasWarning = true;
+            }
+            else {
+
+                if (!Enum.TryParse<FileType>(cbFileType.SelectedValue.ToString(), out fi)) {
+                    MessageBox.Show(String.Format("Option '{0}, cannot be selected as a fortmat type, please check.", cbFileType.SelectedText), "Can't convert to format type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    hasWarning = true;
+                }
+                else
+                    settings.FormatType = (int)fi;
+            }
+
+
+            settings.CopyFilePath = cbCopyFilePath.Checked;
+
+            settings.Save();
+
+            cbFileType.SelectedItem = fi;
             txtExportLocation.Text = settings.ExportLocation;
+
+
 
             if (!hasWarning)
                 this.Hide();
@@ -234,6 +294,28 @@ namespace ClipboardImageToFile {
             if (result == System.Windows.Forms.DialogResult.OK) {
                 txtExportLocation.Text = folderBrowserDialog1.SelectedPath;
             }
+        }
+
+        #endregion
+
+        #region classes
+
+        private class FileOptions {
+
+            public string extension { get; set; }
+            public ImageFormat format { get; set; }
+
+        }
+
+        #endregion
+
+        #region Enums
+
+        private enum FileType {
+            PNG,
+            JPEG,
+            GIF,
+            Bitmap
         }
 
         #endregion
