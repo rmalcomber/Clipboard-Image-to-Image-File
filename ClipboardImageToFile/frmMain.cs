@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 #endregion
 
 namespace ClipboardImageToFile {
@@ -28,22 +29,35 @@ namespace ClipboardImageToFile {
 
         private const string DisabledText = "Disable";
         private const string EnabledText = "Enable";
+
+        IntPtr nextClipboardViewer;
         
+
+        #endregion
+
+        #region Dll Imports
+
+        [DllImport("User32.dll")]
+        protected static extern int SetClipboardViewer(int hWndNewViewer);
+        [DllImport("User32.dll")]
+        public static extern bool ChangeClipboardChain(IntPtr hWndRemove, IntPtr hWndNewNext);
+        [DllImport("User32.dll", CharSet=CharSet.Auto)]
+        public static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
 
         #endregion
 
         //Constructor
         public frmMain() {
             InitializeComponent();
+            nextClipboardViewer = (IntPtr)SetClipboardViewer((int)this.Handle);
             settings = Properties.Settings.Default;
-            tmrPoll.Interval = settings.PollingTime;
             this.WindowState = FormWindowState.Minimized;
             img = new Bitmap(10, 10);
 
 
 #if DEBUG
             settings.Reset();
-#endif 
+#endif
 
 
 #if RELEASE
@@ -60,54 +74,7 @@ namespace ClipboardImageToFile {
 
         }
 
-        #region Timers
-
-        //Checking the current status of the Poll timer and update the relevant places
-        private void StatusCheck_Tick(object sender, EventArgs e) {
-
-            btnRun.Text = StatusText();
-            enableToolStripMenuItem.Text = StatusText();
-            toolStripStatusLabel1.Text = ActualStatusText();
-            not.Text = String.Format(not.Text, ActualStatusText());
-            menuStripStatus.Text = ActualStatusText();
-
-        }
-
-        //Main timer to check the clipboard
-        private void tmrPoll_Tick(object sender, EventArgs e) {
-
-            toolStripStatusLabel1.Text = "Status: Running";
-            CheckClipboard();
-           
-        }
-
-        #endregion
-
         #region Methods
-
-        /// <summary>
-        /// Gets the current status
-        /// </summary>
-        /// <returns>the text form of Enabled or Disabled</returns>
-        private string StatusText() {
-            if (tmrEnabled)
-                return DisabledText;
-
-            else
-                return EnabledText;
-
-        }
-
-        /// <summary>
-        /// Returns some more status text based on the poll timer running
-        /// </summary>
-        /// <returns>Status: {Status}</returns>
-        private string ActualStatusText() {
-            if (tmrEnabled)
-                return "Status: Running";
-            else
-                return "Status: Not Running";
-        }
 
         /// <summary>
         /// Checks the clipboard for any images, if there is an image save it. 
@@ -118,8 +85,6 @@ namespace ClipboardImageToFile {
                 //Storing the image from the clipboard
                 img = Clipboard.GetImage();
 
-                //Clear the clipboard of the entire, otherwise it loop on the next poll. (Maybe some better way of checking)
-                Clipboard.Clear();
 
                 //Get the file name
                 string filePath = settings.ExportLocation + "/" + DateTime.Now.ToString("yyyyMMddhhmmssff");
@@ -143,13 +108,6 @@ namespace ClipboardImageToFile {
             }
         }
 
-        //Enable or Disable the timer, and save its current state to settings.
-        private void Run() {
-            tmrPoll.Enabled = tmrEnabled;
-            settings.tmrEnabled = tmrEnabled;
-            settings.Save();
-        }
-
         //Show the form
         private void ShowSettingsform() {
             this.WindowState = FormWindowState.Normal;
@@ -159,16 +117,44 @@ namespace ClipboardImageToFile {
 
         #endregion
 
+        #region Overrides
+
+        protected override void WndProc(ref Message m) {
+
+            const int WM_DRAWCLIPBOARD = 0x308;
+            const int WM_CHANGECBCHAIN = 0x030D;
+
+
+            switch (m.Msg) {
+                case WM_DRAWCLIPBOARD:
+                    CheckClipboard();
+                    SendMessage(nextClipboardViewer, m.Msg, m.WParam, m.LParam);
+                    break;
+                case WM_CHANGECBCHAIN:
+                    if (m.WParam == nextClipboardViewer)
+                        nextClipboardViewer = m.LParam;
+                    else
+                        SendMessage(nextClipboardViewer, m.Msg, m.WParam, m.LParam);
+                    break;
+
+                    
+                default:
+                    base.WndProc(ref m);
+                    break;
+            }
+
+        }
+
+
+        #endregion
+
         #region Form Events
 
         // Form load
         private void Form1_Load(object sender, EventArgs e) {
 
             txtExportLocation.Text = settings.ExportLocation;
-            txtPollingTime.Text = settings.PollingTime.ToString();
-            tmrEnabled = settings.tmrEnabled;
-            Run();
-
+            
             //Show the settings box if the first time running the application
             if (settings.FirstTime) {
                 ShowSettingsform();
@@ -215,27 +201,12 @@ namespace ClipboardImageToFile {
 
         }
 
-        // Enable/Disable button on settings form
-        private void btnRun_Click(object sender, EventArgs e) {
-            tmrEnabled = !tmrEnabled;
-
-            Run();
-        }
 
         //Update settings button
         private void btn_Update_Click(object sender, EventArgs e) {
 
             bool hasWarning = false;
-            int PollTime = tmrPoll.Interval;
-
-            if (!int.TryParse(txtPollingTime.Text, out PollTime)) {
-                MessageBox.Show(String.Format("'{0}' is not a valid polling time. Please enter a number only", txtPollingTime.Text), "Invalid Poll Time", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                PollTime = settings.PollingTime;
-                hasWarning = true;
-            }
-            else
-                settings.PollingTime = PollTime;
-
+           
 
 
 
@@ -250,8 +221,6 @@ namespace ClipboardImageToFile {
             
 
             txtExportLocation.Text = settings.ExportLocation;
-            txtPollingTime.Text = tmrPoll.Interval.ToString();
-            tmrPoll.Interval = PollTime;
 
             if (!hasWarning)
                 this.Hide();
@@ -265,12 +234,6 @@ namespace ClipboardImageToFile {
             if (result == System.Windows.Forms.DialogResult.OK) {
                 txtExportLocation.Text = folderBrowserDialog1.SelectedPath;
             }
-        }
-
-        //Enable/Disable button on context menu
-        private void enableToolStripMenuItem_Click(object sender, EventArgs e) {
-            tmrEnabled = !tmrEnabled;
-            Run();
         }
 
         #endregion
