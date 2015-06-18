@@ -132,8 +132,13 @@ namespace ClipboardImageToFile {
                         filePath += "_" + count.ToString();
                 }
 
+                //Cast image to new bitmap to stop Surrogate bug 
+                Bitmap bmp = new Bitmap(img);
+
                 //Save out the file
-                img.Save(filePath + FileExtension, System.Drawing.Imaging.ImageFormat.Jpeg);
+                bmp.Save(filePath + FileExtension, System.Drawing.Imaging.ImageFormat.Jpeg);
+                bmp.Dispose();
+                img.Dispose();
 
             }
         }
@@ -181,6 +186,10 @@ namespace ClipboardImageToFile {
             if (!RealExit) {
                 e.Cancel = true;
                 this.Hide();
+            }
+
+            if (img == null) {
+                img.Dispose();
             }
 
         }
