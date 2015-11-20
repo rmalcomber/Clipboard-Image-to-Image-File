@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
+using System.Net;
 #endregion
 
 namespace ClipboardImageToFile {
@@ -22,7 +23,6 @@ namespace ClipboardImageToFile {
 
         #region Global Declarations
 
-        private bool tmrEnabled = false;
         private Settings settings;
         private bool RealExit = false;
         private Image img;
@@ -54,7 +54,8 @@ namespace ClipboardImageToFile {
             this.WindowState = FormWindowState.Minimized;
             img = new Bitmap(10, 10);
 
-
+            diaSettings setdia = new diaSettings();
+            setdia.ShowDialog(this);
 #if DEBUG
             settings.Reset();
 #endif
@@ -82,8 +83,13 @@ namespace ClipboardImageToFile {
         private void CheckClipboard() {
             if (Clipboard.ContainsImage()) {
 
+
+
+
                 //Storing the image from the clipboard
                 img = Clipboard.GetImage();
+
+                
 
                 //Get the file details.
                 FileOptions fi = GetFileOption((FileType)settings.FormatType);
@@ -107,13 +113,80 @@ namespace ClipboardImageToFile {
                 bmp.Dispose();
                 img.Dispose();
 
-                //Copy filepath
-                if (settings.CopyFilePath)
-                    Clipboard.SetText(filePath + fi.extension);
+
+
+                if (MessageBox.Show("Do you want to upload to imgur?", "Upload?", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == System.Windows.Forms.DialogResult.Yes) {
+
+             
+
+                    using (WebClient client = new WebClient()) {
+                        try {
+                            client.Headers.Set(HttpRequestHeader.Authorization, "Client-ID 01a63dbbbc88827");
+
+                            byte[] by = File.ReadAllBytes(filePath + fi.extension);
+
+                            client.UploadDataCompleted += client_UploadDataCompleted;
+
+                            client.UploadDataAsync(new Uri("https://api.imgur.com/3/image"), "POST", by);
+
+                            
+                        }
+                        catch (Exception ex) {
+
+                            MessageBox.Show(ex.Message);
+                        }
+
+                    }
+
+
+                }
+                else
+                    if (settings.CopyFilePath)
+                        Clipboard.SetText(filePath + fi.extension);
+
 
             }
         }
 
+        void client_UploadDataCompleted(object sender, UploadDataCompletedEventArgs e) {
+           var response = System.Text.Encoding.Default.GetString(e.Result);
+           RootObject ro = Newtonsoft.Json.JsonConvert.DeserializeObject<RootObject>(response);
+
+           if (ro.success)
+               if (MessageBox.Show("File Uploaded!") == System.Windows.Forms.DialogResult.OK)
+                   Clipboard.SetText(ro.data.link);
+            }
+
+
+        public class Data {
+            public string id { get; set; }
+            public object title { get; set; }
+            public object description { get; set; }
+            public int datetime { get; set; }
+            public string type { get; set; }
+            public bool animated { get; set; }
+            public int width { get; set; }
+            public int height { get; set; }
+            public int size { get; set; }
+            public int views { get; set; }
+            public int bandwidth { get; set; }
+            public object vote { get; set; }
+            public bool favorite { get; set; }
+            public object nsfw { get; set; }
+            public object section { get; set; }
+            public object account_url { get; set; }
+            public int account_id { get; set; }
+            public object comment_preview { get; set; }
+            public string deletehash { get; set; }
+            public string name { get; set; }
+            public string link { get; set; }
+        }
+
+        public class RootObject {
+            public Data data { get; set; }
+            public bool success { get; set; }
+            public int status { get; set; }
+        }
         //Show the form
         private void ShowSettingsform() {
             this.WindowState = FormWindowState.Normal;
