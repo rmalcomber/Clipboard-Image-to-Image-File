@@ -121,6 +121,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\FileClasses.cs" />
     <Compile Include="diaSettings.cs">
       <SubType>Form</SubType>
     </Compile>

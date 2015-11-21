@@ -1,0 +1,5 @@
+Export Location
+Format Location
+Copy File Path
+Auto Upload To Imgur
+Ask if you want to upload to imgur

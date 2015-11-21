@@ -24,8 +24,8 @@
         /// </summary>
         private void InitializeComponent() {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.btnOK = new System.Windows.Forms.Button();
             this.btnApply = new System.Windows.Forms.Button();
             this.cbFileType = new System.Windows.Forms.ComboBox();
             this.cbCopyFilePath = new System.Windows.Forms.CheckBox();
@@ -33,6 +33,11 @@
             this.bntBrowesLocattion = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.txtExportLocation = new System.Windows.Forms.TextBox();
+            this.cbAutoUpload = new System.Windows.Forms.CheckBox();
+            this.cbAskToUpload = new System.Windows.Forms.CheckBox();
+            this.cbAfterUpload = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -42,7 +47,7 @@
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.84746F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 49.15254F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 82F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 84F));
             this.tableLayoutPanel1.Controls.Add(this.btnCancel, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnOK, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnApply, 0, 0);
@@ -53,23 +58,25 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(247, 29);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
-            // btnOK
-            // 
-            this.btnOK.Location = new System.Drawing.Point(86, 3);
-            this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 0;
-            this.btnOK.Text = "&OK";
-            this.btnOK.UseVisualStyleBackColor = true;
-            // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(167, 3);
+            this.btnCancel.Location = new System.Drawing.Point(165, 3);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
+            // btnOK
+            // 
+            this.btnOK.Location = new System.Drawing.Point(85, 3);
+            this.btnOK.Name = "btnOK";
+            this.btnOK.Size = new System.Drawing.Size(74, 23);
+            this.btnOK.TabIndex = 0;
+            this.btnOK.Text = "&OK";
+            this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnApply
             // 
@@ -81,6 +88,7 @@
             this.btnApply.Text = "Apply";
             this.btnApply.UseVisualStyleBackColor = true;
             this.btnApply.Visible = false;
+            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
             // 
             // cbFileType
             // 
@@ -94,12 +102,14 @@
             // cbCopyFilePath
             // 
             this.cbCopyFilePath.AutoSize = true;
-            this.cbCopyFilePath.Location = new System.Drawing.Point(183, 45);
+            this.cbCopyFilePath.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.cbCopyFilePath.Location = new System.Drawing.Point(12, 68);
             this.cbCopyFilePath.Name = "cbCopyFilePath";
             this.cbCopyFilePath.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.cbCopyFilePath.Size = new System.Drawing.Size(90, 17);
             this.cbCopyFilePath.TabIndex = 16;
             this.cbCopyFilePath.Text = "Copy file path";
+            this.cbCopyFilePath.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.cbCopyFilePath.UseVisualStyleBackColor = true;
             this.cbCopyFilePath.Click += new System.EventHandler(this.valuehaschanged);
             // 
@@ -120,6 +130,7 @@
             this.bntBrowesLocattion.TabIndex = 14;
             this.bntBrowesLocattion.Text = "...";
             this.bntBrowesLocattion.UseVisualStyleBackColor = true;
+            this.bntBrowesLocattion.Click += new System.EventHandler(this.bntBrowesLocattion_Click);
             // 
             // label1
             // 
@@ -138,11 +149,55 @@
             this.txtExportLocation.TabIndex = 12;
             this.txtExportLocation.TextChanged += new System.EventHandler(this.valuehaschanged);
             // 
+            // cbAutoUpload
+            // 
+            this.cbAutoUpload.AutoSize = true;
+            this.cbAutoUpload.Location = new System.Drawing.Point(12, 91);
+            this.cbAutoUpload.Name = "cbAutoUpload";
+            this.cbAutoUpload.Size = new System.Drawing.Size(130, 17);
+            this.cbAutoUpload.TabIndex = 18;
+            this.cbAutoUpload.Text = "Auto Upload To Imgur";
+            this.cbAutoUpload.UseVisualStyleBackColor = true;
+            this.cbAutoUpload.Click += new System.EventHandler(this.valuehaschanged);
+            // 
+            // cbAskToUpload
+            // 
+            this.cbAskToUpload.AutoSize = true;
+            this.cbAskToUpload.Location = new System.Drawing.Point(12, 114);
+            this.cbAskToUpload.Name = "cbAskToUpload";
+            this.cbAskToUpload.Size = new System.Drawing.Size(97, 17);
+            this.cbAskToUpload.TabIndex = 19;
+            this.cbAskToUpload.Text = "Ask To Upload";
+            this.cbAskToUpload.UseVisualStyleBackColor = true;
+            this.cbAskToUpload.Click += new System.EventHandler(this.valuehaschanged);
+            // 
+            // cbAfterUpload
+            // 
+            this.cbAfterUpload.FormattingEnabled = true;
+            this.cbAfterUpload.Location = new System.Drawing.Point(252, 110);
+            this.cbAfterUpload.Name = "cbAfterUpload";
+            this.cbAfterUpload.Size = new System.Drawing.Size(121, 21);
+            this.cbAfterUpload.TabIndex = 20;
+            this.cbAfterUpload.SelectedIndexChanged += new System.EventHandler(this.valuehaschanged);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(177, 118);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(69, 13);
+            this.label3.TabIndex = 21;
+            this.label3.Text = "After Upload:";
+            // 
             // diaSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(391, 191);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.cbAfterUpload);
+            this.Controls.Add(this.cbAskToUpload);
+            this.Controls.Add(this.cbAutoUpload);
             this.Controls.Add(this.cbFileType);
             this.Controls.Add(this.cbCopyFilePath);
             this.Controls.Add(this.label2);
@@ -156,7 +211,7 @@
             this.Name = "diaSettings";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "diaSettings";
-            this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
+            this.Load += new System.EventHandler(this.diaSettings_Load);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -175,5 +230,10 @@
         private System.Windows.Forms.Button bntBrowesLocattion;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtExportLocation;
+        private System.Windows.Forms.CheckBox cbAutoUpload;
+        private System.Windows.Forms.CheckBox cbAskToUpload;
+        private System.Windows.Forms.ComboBox cbAfterUpload;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
     }
 }

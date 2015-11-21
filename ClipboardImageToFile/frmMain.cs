@@ -57,19 +57,19 @@ namespace ClipboardImageToFile {
             diaSettings setdia = new diaSettings();
             setdia.ShowDialog(this);
 #if DEBUG
-            settings.Reset();
-#endif
-
-
-#if RELEASE
-            
             if (settings.FirstTime) {
                 string dir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 if (Directory.Exists(dir))
                     settings.ExportLocation = dir;
                 settings.Save();
-                    
+
             }
+#endif
+
+
+#if RELEASE
+            
+
 #endif
 
 
@@ -83,16 +83,13 @@ namespace ClipboardImageToFile {
         private void CheckClipboard() {
             if (Clipboard.ContainsImage()) {
 
-
-
-
                 //Storing the image from the clipboard
                 img = Clipboard.GetImage();
 
-                
+
 
                 //Get the file details.
-                FileOptions fi = GetFileOption((FileType)settings.FormatType);
+                FileOptions fi = FileController.GetFileOption((global::FileType)settings.FormatType);
 
                 //Get the file name
                 string filePath = settings.ExportLocation + @"\" + DateTime.Now.ToString("yyyyMMddhhmmssff");
@@ -113,114 +110,68 @@ namespace ClipboardImageToFile {
                 bmp.Dispose();
                 img.Dispose();
 
+                bool performUpload = false;
+                byte[] by = File.ReadAllBytes(filePath + fi.extension);
 
-
-                if (MessageBox.Show("Do you want to upload to imgur?", "Upload?", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == System.Windows.Forms.DialogResult.Yes) {
-
-             
-
-                    using (WebClient client = new WebClient()) {
-                        try {
-                            client.Headers.Set(HttpRequestHeader.Authorization, "Client-ID 01a63dbbbc88827");
-
-                            byte[] by = File.ReadAllBytes(filePath + fi.extension);
-
-                            client.UploadDataCompleted += client_UploadDataCompleted;
-
-                            client.UploadDataAsync(new Uri("https://api.imgur.com/3/image"), "POST", by);
-
-                            
-                        }
-                        catch (Exception ex) {
-
-                            MessageBox.Show(ex.Message);
-                        }
-
-                    }
-
-
-                }
+                if (settings.AutoUpload)
+                    performUpload = true;
                 else
-                    if (settings.CopyFilePath)
-                        Clipboard.SetText(filePath + fi.extension);
+                    if (settings.AskToUpload)
+                        if (MessageBox.Show("Do you want to upload to imgur?", "Upload?", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == System.Windows.Forms.DialogResult.Yes)
+                            performUpload = true;
+                        else
+                            if (settings.CopyFilePath)
+                                Clipboard.SetText(filePath + fi.extension);
 
+                if (performUpload)
+                    FileController.UploadToImgur(filePath + fi.extension, client_UploadDataCompleted);
+                else
+                    Clipboard.SetText(filePath + fi.extension);
 
             }
         }
 
         void client_UploadDataCompleted(object sender, UploadDataCompletedEventArgs e) {
-           var response = System.Text.Encoding.Default.GetString(e.Result);
-           RootObject ro = Newtonsoft.Json.JsonConvert.DeserializeObject<RootObject>(response);
+            var response = System.Text.Encoding.Default.GetString(e.Result);
+            RootObject ro = Newtonsoft.Json.JsonConvert.DeserializeObject<RootObject>(response);
 
-           if (ro.success)
-               if (MessageBox.Show("File Uploaded!") == System.Windows.Forms.DialogResult.OK)
-                   Clipboard.SetText(ro.data.link);
-            }
+            global::AfterUpload au = (AfterUpload)settings.AfterUpload;
+            
+            if (ro.success)
+                switch (au) {
+                    case AfterUpload.Copy_address_to_clipboard:
+                        Clipboard.SetText(ro.data.link);
+                        not.BalloonTipTitle = "Uploaded!";
+                        not.BalloonTipText = ro.data.link;
+                        not.ShowBalloonTip(5000);
+                        not.Click += not_Click;
+                        break;
+                    case AfterUpload.Open_browser:
+                        System.Diagnostics.Process.Start(ro.data.link);
+                        Clipboard.SetText(ro.data.link);
+                        break;
+                    case AfterUpload.Nothing:
+                        break;
+                    default:
+                        break;
+                }
 
-
-        public class Data {
-            public string id { get; set; }
-            public object title { get; set; }
-            public object description { get; set; }
-            public int datetime { get; set; }
-            public string type { get; set; }
-            public bool animated { get; set; }
-            public int width { get; set; }
-            public int height { get; set; }
-            public int size { get; set; }
-            public int views { get; set; }
-            public int bandwidth { get; set; }
-            public object vote { get; set; }
-            public bool favorite { get; set; }
-            public object nsfw { get; set; }
-            public object section { get; set; }
-            public object account_url { get; set; }
-            public int account_id { get; set; }
-            public object comment_preview { get; set; }
-            public string deletehash { get; set; }
-            public string name { get; set; }
-            public string link { get; set; }
         }
 
-        public class RootObject {
-            public Data data { get; set; }
-            public bool success { get; set; }
-            public int status { get; set; }
+        void not_Click(object sender, EventArgs e) {
+            System.Diagnostics.Process.Start(not.BalloonTipText);
         }
+
+
+
         //Show the form
         private void ShowSettingsform() {
-            this.WindowState = FormWindowState.Normal;
-            this.Show();
-            this.BringToFront();
+            diaSettings sets = new diaSettings();
+            sets.ShowDialog(this);
         }
 
         //Gets the file type details
-        private FileOptions GetFileOption(FileType ft) {
 
-            FileOptions ret = new FileOptions();
-            ret.extension = "." + Enum.GetName(typeof(FileType), ft);
-
-            switch (ft) {
-                case FileType.PNG:
-                    ret.format = ImageFormat.Png;
-                    break;
-                case FileType.JPEG:
-                    ret.format = ImageFormat.Jpeg;
-                    break;
-                case FileType.GIF:
-                    ret.format = ImageFormat.Gif;
-                    break;
-                case FileType.Bitmap:
-                    ret.format = ImageFormat.Bmp;
-                    break;
-                default:
-                    ret.format = ImageFormat.Jpeg;
-                    break;
-            }
-
-            return ret;
-
-        }
 
         #endregion
 
@@ -260,19 +211,16 @@ namespace ClipboardImageToFile {
         // Form load
         private void Form1_Load(object sender, EventArgs e) {
 
-            txtExportLocation.Text = settings.ExportLocation;
+
 
             //Show the settings box if the first time running the application
             if (settings.FirstTime) {
-                ShowSettingsform();
-                settings.FirstTime = false;
-                settings.Save();
+                diaSettings set = new diaSettings();
+                set.ShowDialog(this);
             }
 
 
-            cbFileType.DataSource = Enum.GetNames(typeof(FileType));
-            cbFileType.SelectedItem = (FileType)settings.FormatType;
-            cbCopyFilePath.Checked = settings.CopyFilePath;
+
 
         }
 
@@ -314,84 +262,8 @@ namespace ClipboardImageToFile {
 
         }
 
-
-        //Update settings button
-        private void btn_Update_Click(object sender, EventArgs e) {
-
-            bool hasWarning = false;
-
-
-            if (!Directory.Exists(txtExportLocation.Text)) {
-                MessageBox.Show(String.Format("Directory '{0}' cannot be found, please check", txtExportLocation.Text), "Can't Find Directory", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                hasWarning = true;
-            }
-            else
-                settings.ExportLocation = txtExportLocation.Text;
-
-
-            FileType fi = (FileType)settings.FormatType;
-
-            if (cbFileType.SelectedValue == null) {
-                MessageBox.Show(String.Format("Format option is invalid, please check.", cbFileType.SelectedText), "Can't convert to format type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                hasWarning = true;
-            }
-            else {
-
-                if (!Enum.TryParse<FileType>(cbFileType.SelectedValue.ToString(), out fi)) {
-                    MessageBox.Show(String.Format("Option '{0}, cannot be selected as a fortmat type, please check.", cbFileType.SelectedText), "Can't convert to format type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    hasWarning = true;
-                }
-                else
-                    settings.FormatType = (int)fi;
-            }
-
-
-            settings.CopyFilePath = cbCopyFilePath.Checked;
-
-            settings.Save();
-
-            cbFileType.SelectedItem = fi;
-            txtExportLocation.Text = settings.ExportLocation;
-
-
-
-            if (!hasWarning)
-                this.Hide();
-        }
-
-        //Browse location button
-        private void bntBrowesLocattion_Click(object sender, EventArgs e) {
-            folderBrowserDialog1.SelectedPath = settings.ExportLocation;
-            DialogResult result = folderBrowserDialog1.ShowDialog();
-
-            if (result == System.Windows.Forms.DialogResult.OK) {
-                txtExportLocation.Text = folderBrowserDialog1.SelectedPath;
-            }
-        }
-
         #endregion
 
-        #region classes
-
-        private class FileOptions {
-
-            public string extension { get; set; }
-            public ImageFormat format { get; set; }
-
-        }
-
-        #endregion
-
-        #region Enums
-
-        private enum FileType {
-            PNG,
-            JPEG,
-            GIF,
-            Bitmap
-        }
-
-        #endregion
 
     }
 }
