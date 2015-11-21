@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Configuration;
 
 public class FileOptions {
     public string extension { get; set; }
@@ -50,7 +51,8 @@ public static class FileController {
       
 
         using (WebClient client = new WebClient()) {
-            client.Headers.Set(HttpRequestHeader.Authorization, "Client-ID 01a63dbbbc88827");
+            string ClientID = ConfigurationManager.AppSettings["imgurClientID"];
+            client.Headers.Set(HttpRequestHeader.Authorization, String.Format("Client-ID {0}",ClientID));
             byte[] by = File.ReadAllBytes(filepath);
 
             client.UploadDataCompleted += uploadComplete;

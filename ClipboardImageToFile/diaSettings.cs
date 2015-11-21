@@ -39,17 +39,18 @@ namespace ClipboardImageToFile {
             txtExportLocation.Text = settings.ExportLocation;
 
             cbFileType.DataSource = Enum.GetNames(typeof(FileType));
-            cbFileType.SelectedItem = (FileType)settings.FormatType;
+            cbFileType.SelectedIndex = settings.FormatType;
             cbCopyFilePath.Checked = settings.CopyFilePath;
 
             cbAfterUpload.DataSource = Enum.GetNames(typeof(AfterUpload));
-            cbAfterUpload.SelectedItem = (AfterUpload)settings.AfterUpload;
+            cbAfterUpload.SelectedIndex = settings.AfterUpload;
 
             cbAutoUpload.Checked = settings.AutoUpload;
             cbAskToUpload.Checked = settings.AskToUpload;
             hasWarning = false;
             btnApply.Enabled = false;
-            btnApply.Visible = false;
+            btnApply.Visible = true;
+            isDirty = false;
 
         }
 
@@ -88,7 +89,7 @@ namespace ClipboardImageToFile {
                 MessageBox.Show(String.Format("After Upload option is invalid"), "Can't convert to after upload type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 hasWarning = true;
             } else
-                if (!Enum.TryParse<AfterUpload>(cbAfterUpload.SelectedValue.ToString(), out au)) {
+                 if (!Enum.TryParse<AfterUpload>(cbAfterUpload.SelectedValue.ToString(), out au)) {
                     MessageBox.Show(String.Format("Option '{0}, cannot be selected as a after upload type, please check.", cbAfterUpload.SelectedText), "Can't convert to format type", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     hasWarning = true;
                 } else
@@ -97,8 +98,10 @@ namespace ClipboardImageToFile {
 
             settings.FirstTime = false;
 
-            if (!hasWarning)
+            if (!hasWarning) {
                 settings.Save();
+                isDirty = false;
+            }
 
 
         }
@@ -107,7 +110,6 @@ namespace ClipboardImageToFile {
 
         private void valuehaschanged(object sender, EventArgs e) {
             btnApply.Enabled = true;
-            btnApply.Visible = true;
             isDirty = true;
         }
 

@@ -54,24 +54,18 @@ namespace ClipboardImageToFile {
             this.WindowState = FormWindowState.Minimized;
             img = new Bitmap(10, 10);
 
-            diaSettings setdia = new diaSettings();
-            setdia.ShowDialog(this);
-#if DEBUG
+          
             if (settings.FirstTime) {
                 string dir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                if (Directory.Exists(dir))
+                if (Directory.Exists(dir)) {
                     settings.ExportLocation = dir;
-                settings.Save();
+                    settings.Save();
+
+                    ShowSettingsform();
+
+                }
 
             }
-#endif
-
-
-#if RELEASE
-            
-
-#endif
-
 
         }
 
@@ -144,7 +138,7 @@ namespace ClipboardImageToFile {
                         not.BalloonTipTitle = "Uploaded!";
                         not.BalloonTipText = ro.data.link;
                         not.ShowBalloonTip(5000);
-                        not.Click += not_Click;
+                        not.BalloonTipClicked += not_Click;
                         break;
                     case AfterUpload.Open_browser:
                         System.Diagnostics.Process.Start(ro.data.link);
@@ -159,15 +153,17 @@ namespace ClipboardImageToFile {
         }
 
         void not_Click(object sender, EventArgs e) {
-            System.Diagnostics.Process.Start(not.BalloonTipText);
+
+            if (!string.IsNullOrWhiteSpace(not.BalloonTipText)) {
+                System.Diagnostics.Process.Start(not.BalloonTipText); 
+            }
+            not.BalloonTipText = "";
         }
-
-
 
         //Show the form
         private void ShowSettingsform() {
             diaSettings sets = new diaSettings();
-            sets.ShowDialog(this);
+            sets.ShowDialog();
         }
 
         //Gets the file type details
